@@ -23,8 +23,6 @@ from views import (
     update_style,
 )
 
-print(get_all_metals())
-
 
 class HandleRequests(BaseHTTPRequestHandler):
     """Controls the functionality of any GET, PUT, POST, DELETE requests to the server"""
@@ -87,7 +85,7 @@ class HandleRequests(BaseHTTPRequestHandler):
             else:
                 response = get_all_sizes()
 
-        self.wfile.write(json.dumps(response).encode())
+        self.wfile.write(response.encode())
 
     def do_POST(self):
         self._set_headers(201)
@@ -171,7 +169,6 @@ class HandleRequests(BaseHTTPRequestHandler):
         self.wfile.write("".encode())
 
     def do_PUT(self):
-        self._set_headers(204)
         content_len = int(self.headers.get("content-length", 0))
         post_body = self.rfile.read(content_len)
         post_body = json.loads(post_body)
@@ -179,33 +176,40 @@ class HandleRequests(BaseHTTPRequestHandler):
         # Parse the URL
         (resource, id) = self.parse_url(self.path)
 
+        success = False
+
         # Delete a single animal from the list
         if resource == "metals":
-            update_metal(id, post_body)
+            success = update_metal(id, post_body)
 
             # Encode the new animal and send in response
-            self.wfile.write("".encode())
+            # self.wfile.write("".encode())
 
         # Delete a single animal from the list
-        if resource == "orders":
+        elif resource == "orders":
             update_order(id, post_body)
 
             # Encode the new animal and send in response
-            self.wfile.write("".encode())
+            # self.wfile.write("".encode())
 
         # Delete a single animal from the list
-        if resource == "sizes":
+        elif resource == "sizes":
             update_size(id, post_body)
 
             # Encode the new animal and send in response
-            self.wfile.write("".encode())
+            # self.wfile.write("".encode())
 
         # Delete a single animal from the list
-        if resource == "styles":
+        elif resource == "styles":
             update_style(id, post_body)
 
+        if success:
+            self._set_headers(204)
+        else:
+            self._set_headers(404)
+
             # Encode the new animal and send in response
-            self.wfile.write("".encode())
+        self.wfile.write("".encode())
 
     def _set_headers(self, status):
         """Sets the status code, Content-Type and Access-Control-Allow-Origin
