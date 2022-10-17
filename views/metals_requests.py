@@ -1,8 +1,45 @@
+import json
+import sqlite3
+from models import Metal
+
 METALS = [{"id": 1, "metal": "Sterling Silver", "price": 12.42}]
 
 
 def get_all_metals():
-    return METALS
+    # Open a connection to the database
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+
+        # Just use these. It's a Black Box.
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        # Write the SQL query to get the information you want
+        db_cursor.execute(
+            """
+        SELECT
+            m.id,
+            m.metal,
+            m.price
+        FROM metals m
+        """
+        )
+
+        # Initialize an empty list to hold all animal representations
+        metals = []
+
+        # Convert rows of data into a Python list
+        dataset = db_cursor.fetchall()
+
+        # Iterate list of data returned from database
+        for row in dataset:
+
+            # Create an animal instance from the current row
+            metal = Metal(row["id"], row["metal"], row["price"])
+
+            # Add the dictionary representation of the animal to the list
+            metals.append(metal.__dict__)
+
+        return json.dumps(metals)
 
 
 # Function with a single parameter
@@ -54,11 +91,32 @@ def delete_metal(id):
         METALS.pop(metal_index)
 
 
-def update_metal(id, new_metal):
-    # Iterate the METALS list, but use enumerate() so that
-    # you can access the index value of each item.
-    for index, metal in enumerate(METALS):
-        if metal["id"] == id:
-            # Found the animal. Update the value.
-            METALS[index] = new_metal
-            break
+def update_metal(id, updated_metal):
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute(
+            """
+        UPDATE Metals
+            SET
+                metal = ?,
+                price = ?
+        WHERE id = ?
+        """,
+            (
+                updated_metal["metal"],
+                updated_metal["price"],
+                id,
+            ),
+        )
+
+        # Were any rows affected?
+        # Did the client send an `id` that exists?
+        rows_affected = db_cursor.rowcount
+
+        if rows_affected == 0:
+            # Forces 404 response by main module
+            return False
+        else:
+            # Forces 204 response by main module
+            return True
