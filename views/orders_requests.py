@@ -73,6 +73,7 @@ JOIN Styles s ON s.id = o.style_id
 
 # Function with a single parameter
 def get_single_order(id):
+    """function gets a single order"""
     with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
         conn.row_factory = sqlite3.Row
         db_cursor = conn.cursor()
